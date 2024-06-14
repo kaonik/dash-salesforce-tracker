@@ -10,6 +10,7 @@ from typing import Dict, Any
 from record_type import RecordType
 import win32gui, win32api, win32con
 from time import sleep
+import string
 
 logger = logging.getLogger(__name__)
 
@@ -140,6 +141,7 @@ tools = [
     "Show Implot Demo",
 ]
 
+punctuation_dict = str.maketrans({x: None for x in string.punctuation})
 
 keyboard.add_hotkey("F1", toggle_viewport_visibility, suppress=True)
 logging.basicConfig(level=logging.DEBUG)
@@ -147,21 +149,25 @@ logging.basicConfig(level=logging.DEBUG)
 notepad_shortcut_dict = {"cn": "Case", "co": "Contact"}
 
 
-def notepad_shortcut_replace(sender, app_data, user_data):
+def notepad_shortcut_replace(sender, app_data: str, user_data):
     print(sender, app_data, user_data)
-    last_words = app_data.rsplit(" ", maxsplit=2)
+    last_words: list = app_data.rsplit(" ", maxsplit=2)
     if len(last_words) > 1:
-        check_word = last_words[-2]
-        logger.debug(f"Checking {check_word} for shortcut match.")
+        check_word: str = last_words[-2]
+        # Remove all punctuation
+        clean_word = check_word.translate(punctuation_dict)
+        word_difference = check_word[len(clean_word) :]
+        logger.debug(f"Checking {clean_word} for shortcut match.")
 
-        if check_word in notepad_shortcut_dict:
-            record_type = notepad_shortcut_dict[check_word]
+        if clean_word in notepad_shortcut_dict:
+            record_type = notepad_shortcut_dict[clean_word]
             logger.debug(f"Checking {record_type} for salesforce_dict match.")
 
             if record_type in salesforce_dict:
 
-                record_class = salesforce_dict[notepad_shortcut_dict[check_word]]
+                record_class = salesforce_dict[notepad_shortcut_dict[clean_word]]
                 replace = next(iter(record_class.values))
+                replace += word_difference
                 logger.debug(f"Replacement value: {replace}")
 
                 last_words[-2] = replace

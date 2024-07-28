@@ -74,7 +74,10 @@ if __name__ == "__main__":
     two = {"a": "c", "b": "b"}
     three = OrderedDict.fromkeys("ab")
     limit_test = RecordType("limit_test")
+    limit_test.name = "limit_test"
+    print(limit_test.name)
     for x in range(30):
-        limit_test.add_value(x)
+        val = x - 10
+        limit_test.add_value(x, val)
     print(limit_test.values)
     print(next(iter(limit_test.values)))
